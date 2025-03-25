@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aggregator-cron
+spec:
+  schedule: "*/2 * * * *"  # Every 2 minutes (for testing)
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: aggregator-job
+            image: aggregator-service:latest
+            imagePullPolicy: IfNotPresent
+            command: ["python", "aggregate_job.py"]
+          restartPolicy: OnFailure

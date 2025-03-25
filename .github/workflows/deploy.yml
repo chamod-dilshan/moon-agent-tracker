@@ -1,0 +1,27 @@
+name: CI/CD - Local Minikube
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker images
+      run: |
+        docker build -t agent-service ./agent-service
+        docker build -t integration-service ./integration-service
+        docker build -t notification-service ./notification-service
+        docker build -t aggregator-service ./aggregator-service
+
+    - name: Display success message
+      run: echo " All images built. Deployment to cluster is manual in Minikube."
