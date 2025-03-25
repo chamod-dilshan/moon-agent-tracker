@@ -24,6 +24,9 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build and Push Docker Images
+      env:
+        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        IMAGE_TAG: latest
       run: |
         IMAGE_TAG=latest
         for SERVICE in agent-service integration-service notification-service aggregator-service
