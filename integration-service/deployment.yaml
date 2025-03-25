@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: integration-service
-        image: integration-service:latest
+        image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/integration-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5001

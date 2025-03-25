@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: agent-service
-        image: agent-service:latest
+        image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/agent-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
