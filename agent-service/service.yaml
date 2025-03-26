@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: agent-service
 spec:
+  type: LoadBalancer
   selector:
     app: agent-service
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 5000
-  type: NodePort
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
