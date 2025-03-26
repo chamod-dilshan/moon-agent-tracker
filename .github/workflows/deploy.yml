@@ -24,4 +24,4 @@ jobs:
         docker build -t aggregator-service ./aggregator-service
 
     - name: Display success message
-      run: echo " All images built. Deployment to cluster is manual in Minikube."
+      run: echo " All images built."
