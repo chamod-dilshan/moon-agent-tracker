@@ -1,6 +1,25 @@
 from flask import Flask, request, jsonify
+import psycopg2
+import os
+from datetime import datetime
 
 app = Flask(__name__)
+
+# 🔌 Redshift connection details
+REDSHIFT_HOST = os.getenv('REDSHIFT_HOST')
+REDSHIFT_DB = os.getenv('REDSHIFT_DB')
+REDSHIFT_USER = os.getenv('REDSHIFT_USER')
+REDSHIFT_PASSWORD = os.getenv('REDSHIFT_PASSWORD')
+REDSHIFT_PORT = 5439
+
+def get_redshift_connection():
+    return psycopg2.connect(
+        host=REDSHIFT_HOST,
+        port=REDSHIFT_PORT,
+        database=REDSHIFT_DB,
+        user=REDSHIFT_USER,
+        password=REDSHIFT_PASSWORD
+    )
 
 @app.route('/notify', methods=['POST'])
 def notify():
@@ -9,10 +28,23 @@ def notify():
     if 'agent_code' not in data or 'message' not in data:
         return jsonify({"error": "Missing agent_code or message"}), 400
     
-    # Simulate sending notification
-    print(f"[NOTIFICATION] Agent {data['agent_code']}: {data['message']}")
-    
-    return jsonify({"message": "Notification sent"}), 200
+    # Log notification to Redshift
+    try:
+        conn = get_redshift_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO notifications (agent_id, message, sent_at)
+            VALUES (%s, %s, %s)
+        """, (data['agent_code'], data['message'], datetime.now()))
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        print(f"[NOTIFICATION] Agent {data['agent_code']}: {data['message']}")
+        return jsonify({"message": "Notification sent and logged"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])
 def home():

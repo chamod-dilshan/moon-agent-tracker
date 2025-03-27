@@ -1,30 +1,54 @@
 from collections import defaultdict
 from datetime import datetime
+import psycopg2
+import os
 
-sales = [
-    {"agent_code": "A101", "product": "LifeCover-Plus", "amount": 1200.0},
-    {"agent_code": "A102", "product": "Health-Protect", "amount": 900.0},
-    {"agent_code": "A101", "product": "LifeCover-Plus", "amount": 1000.0},
-    {"agent_code": "A103", "product": "Health-Protect", "amount": 600.0},
-    {"agent_code": "A102", "product": "LifeCover-Plus", "amount": 800.0}
-]
+# 🔌 Redshift config
+REDSHIFT_HOST = os.getenv('REDSHIFT_HOST')
+REDSHIFT_DB = os.getenv('REDSHIFT_DB')
+REDSHIFT_USER = os.getenv('REDSHIFT_USER')
+REDSHIFT_PASSWORD = os.getenv('REDSHIFT_PASSWORD')
+REDSHIFT_PORT = 5439
+
+def get_redshift_connection():
+    return psycopg2.connect(
+        host=REDSHIFT_HOST,
+        port=REDSHIFT_PORT,
+        database=REDSHIFT_DB,
+        user=REDSHIFT_USER,
+        password=REDSHIFT_PASSWORD
+    )
 
 def aggregate_sales():
-    totals_by_agent = defaultdict(float)
-    totals_by_product = defaultdict(float)
+    try:
+        conn = get_redshift_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT agent_id, product_code, sale_amount FROM sales")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
 
-    for sale in sales:
-        totals_by_agent[sale["agent_code"]] += sale["amount"]
-        totals_by_product[sale["product"]] += sale["amount"]
+        totals_by_agent = defaultdict(float)
+        totals_by_product = defaultdict(float)
 
-    print(f"[{datetime.now()}] Aggregated sales report:")
-    print("Total Sales by Agent:")
-    for agent, total in totals_by_agent.items():
-        print(f"  - {agent}: ${total:.2f}")
+        for row in rows:
+            agent_id = row[0]
+            product = row[1]
+            amount = float(row[2])
+            totals_by_agent[agent_id] += amount
+            totals_by_product[product] += amount
 
-    print("Total Sales by Product:")
-    for product, total in totals_by_product.items():
-        print(f"  - {product}: ${total:.2f}")
+        print(f"[{datetime.now()}] Aggregated sales report:")
+        print("Total Sales by Agent:")
+        for agent, total in totals_by_agent.items():
+            print(f"  - {agent}: ${total:.2f}")
+
+        print("Total Sales by Product:")
+        for product, total in totals_by_product.items():
+            print(f"  - {product}: ${total:.2f}")
+
+    except Exception as e:
+        print(f"[ERROR] {e}")
 
 if __name__ == '__main__':
     aggregate_sales()

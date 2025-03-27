@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: aggregator-service
 spec:
+  type: LoadBalancer
   selector:
     app: aggregator-service
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 5003
-  type: NodePort
+    - protocol: TCP
+      port: 80
+      targetPort: 5003

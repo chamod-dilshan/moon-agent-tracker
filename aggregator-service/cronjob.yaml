@@ -3,14 +3,22 @@ kind: CronJob
 metadata:
   name: aggregator-cron
 spec:
-  schedule: "0 */2 * * *"  # Every 2 hours
+  schedule: "0 */2 * * *"  # every 2 hours
   jobTemplate:
     spec:
       template:
         spec:
           containers:
           - name: aggregator-job
-            image: aggregator-service:latest
-            imagePullPolicy: IfNotPresent
+            image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/aggregator-service:latest
             command: ["python", "aggregate_job.py"]
+            env:
+              - name: REDSHIFT_HOST
+                value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
+              - name: REDSHIFT_DB
+                value: "moonmetrics_db"
+              - name: REDSHIFT_USER
+                value: "admin"
+              - name: REDSHIFT_PASSWORD
+                value: "DATAst2012"
           restartPolicy: OnFailure

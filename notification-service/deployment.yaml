@@ -15,6 +15,14 @@ spec:
       containers:
       - name: notification-service
         image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/notification-service:latest
-        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5002
+        env:
+        - name: REDSHIFT_HOST
+          value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
+        - name: REDSHIFT_DB
+          value: "moonmetrics_db"
+        - name: REDSHIFT_USER
+          value: "admin"
+        - name: REDSHIFT_PASSWORD
+          value: "DATAst2012"
