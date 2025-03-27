@@ -75,4 +75,9 @@ jobs:
 
         
 
-        echo "✅ Blue-Green deployment done. Live version is now: $NEW_COLOR"
+        echo "Blue-Green deployment done. Live version is now: $NEW_COLOR"
+
+    - name: Run Integration Tests
+      run: |
+        pip install requests
+        python tests/test_endpoints.py
