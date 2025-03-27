@@ -11,7 +11,7 @@ BASE_URLS = {
 ENDPOINTS = {
     "agent": "/agents",
     "integration": "/sales",
-    "notification": "/notify",
+    "notification": "/",
     "aggregator": "/aggregate"
 }
 
