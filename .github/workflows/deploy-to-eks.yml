@@ -43,7 +43,7 @@ jobs:
 
     - name: Deploy with Blue-Green Strategy
       run: |
-        CURRENT_COLOR=$(kubectl get svc agent-service -o=jsonpath='{.spec.selector.version}')
+        CURRENT_COLOR=$(kubectl get svc agent-service -o=jsonpath='{.spec.selector.version}' 2>/dev/null || echo "none")
         if [ "$CURRENT_COLOR" = "blue" ]; then
           NEW_COLOR="green"
         else
