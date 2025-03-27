@@ -6,6 +6,7 @@ spec:
   type: LoadBalancer
   selector:
     app: aggregator-service
+    version: blue  # switch to green when promoting green
   ports:
     - protocol: TCP
       port: 80

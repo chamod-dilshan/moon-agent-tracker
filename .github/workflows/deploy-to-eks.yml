@@ -28,11 +28,10 @@ jobs:
         ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         IMAGE_TAG: latest
       run: |
-        IMAGE_TAG=latest
         for SERVICE in agent-service integration-service notification-service aggregator-service
         do
-          docker build -t $ECR_REGISTRY/$SERVICE:$IMAGE_TAG ./$SERVICE
-          docker push $ECR_REGISTRY/$SERVICE:$IMAGE_TAG
+          docker build -t $ECR_REGISTRY/$SERVICE:latest ./$SERVICE
+          docker push $ECR_REGISTRY/$SERVICE:latest
         done
 
     - name: Update kubeconfig for EKS
@@ -42,16 +41,36 @@ jobs:
       run: |
         aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
-    - name: Deploy to EKS
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
+    - name: Deploy with Blue-Green Strategy
       run: |
-        kubectl apply -f agent-service/deployment.yaml
-        kubectl apply -f agent-service/service.yaml
-        kubectl apply -f integration-service/deployment.yaml
-        kubectl apply -f integration-service/service.yaml
-        kubectl apply -f notification-service/deployment.yaml
-        kubectl apply -f notification-service/service.yaml
-        kubectl apply -f aggregator-service/deployment.yaml
-        kubectl apply -f aggregator-service/service.yaml
+        CURRENT_COLOR=$(kubectl get svc agent-service -o=jsonpath='{.spec.selector.version}')
+        if [ "$CURRENT_COLOR" = "blue" ]; then
+          NEW_COLOR="green"
+        else
+          NEW_COLOR="blue"
+        fi
+
+        echo "Deploying new version to $NEW_COLOR..."
+
+        # Apply blue/green deployment files
+        kubectl apply -f agent-service/deployment-${NEW_COLOR}.yaml
+        kubectl apply -f aggregator-service/deployment-${NEW_COLOR}.yaml
+        kubectl apply -f integration-service/deployment-${NEW_COLOR}.yaml
+        kubectl apply -f notification-service/deployment-${NEW_COLOR}.yaml
+
+        # CronJob remains the same
         kubectl apply -f aggregator-service/cronjob.yaml
+
+        # Patch services to route to the new version
+        kubectl patch svc agent-service -p "{\"spec\": {\"selector\": {\"app\": \"agent-service\", \"version\": \"${NEW_COLOR}\"}}}"
+        kubectl patch svc aggregator-service -p "{\"spec\": {\"selector\": {\"app\": \"aggregator-service\", \"version\": \"${NEW_COLOR}\"}}}"
+        kubectl patch svc integration-service -p "{\"spec\": {\"selector\": {\"app\": \"integration-service\", \"version\": \"${NEW_COLOR}\"}}}"
+        kubectl patch svc notification-service -p "{\"spec\": {\"selector\": {\"app\": \"notification-service\", \"version\": \"${NEW_COLOR}\"}}}"
+
+        # Ensure services exist
+        kubectl apply -f agent-service/service.yaml
+        kubectl apply -f integration-service/service.yaml
+        kubectl apply -f notification-service/service.yaml
+        kubectl apply -f aggregator-service/service.yaml
+
+        echo "✅ Blue-Green deployment done. Live version is now: $NEW_COLOR"

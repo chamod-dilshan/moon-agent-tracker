@@ -1,16 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: aggregator-service
+  name: aggregator-service-green
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: aggregator-service
+      version: green
   template:
     metadata:
       labels:
         app: aggregator-service
+        version: green
     spec:
       containers:
       - name: aggregator-service
@@ -19,11 +21,11 @@ spec:
         ports:
         - containerPort: 5003
         env:
-          - name: REDSHIFT_HOST
-            value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
-          - name: REDSHIFT_DB
-            value: "moonmetrics_db"
-          - name: REDSHIFT_USER
-            value: "admin"
-          - name: REDSHIFT_PASSWORD
-            value: "DATAst2012"
+        - name: REDSHIFT_HOST
+          value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
+        - name: REDSHIFT_DB
+          value: "moonmetrics_db"
+        - name: REDSHIFT_USER
+          value: "admin"
+        - name: REDSHIFT_PASSWORD
+          value: "DATAst2012"

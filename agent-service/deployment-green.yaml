@@ -1,22 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: integration-service
+  name: agent-service-green
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: integration-service
+      app: agent-service
+      version: green
   template:
     metadata:
       labels:
-        app: integration-service
+        app: agent-service
+        version: green
     spec:
       containers:
-      - name: integration-service
-        image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/integration-service:latest
+      - name: agent-service
+        image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/agent-service:latest
         ports:
-        - containerPort: 5001
+        - containerPort: 5000
         env:
         - name: REDSHIFT_HOST
           value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"

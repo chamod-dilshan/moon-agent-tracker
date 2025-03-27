@@ -1,22 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notification-service
+  name: integration-service-green
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: notification-service
+      app: integration-service
+      version: green
   template:
     metadata:
       labels:
-        app: notification-service
+        app: integration-service
+        version: green
     spec:
       containers:
-      - name: notification-service
-        image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/notification-service:latest
+      - name: integration-service
+        image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/integration-service:latest
         ports:
-        - containerPort: 5002
+        - containerPort: 5001
         env:
         - name: REDSHIFT_HOST
           value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
