@@ -26,7 +26,7 @@ def aggregate():
     try:
         conn = get_redshift_connection()
         cur = conn.cursor()
-        cur.execute("SELECT agent_id, product_code, sale_amount FROM sales")
+        cur.execute("SELECT agent_id, product_code, sale_amount FROM moontracker.sales")
         rows = cur.fetchall()
         cur.close()
         conn.close()

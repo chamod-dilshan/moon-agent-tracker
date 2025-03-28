@@ -37,7 +37,7 @@ def record_sale():
         conn = get_redshift_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO sales (sale_id, agent_id, product_code, sale_amount, sale_date)
+            INSERT INTO moontracker.sales (sale_id, agent_id, product_code, sale_amount, sale_date)
             VALUES (%s, %s, %s, %s, %s)
         """, (
             sale_id,
@@ -60,7 +60,7 @@ def get_sales():
     try:
         conn = get_redshift_connection()
         cur = conn.cursor()
-        cur.execute("SELECT sale_id, agent_id, product_code, sale_amount, sale_date FROM sales")
+        cur.execute("SELECT sale_id, agent_id, product_code, sale_amount, sale_date FROM moontracker.sales")
         rows = cur.fetchall()
         cur.close()
         conn.close()

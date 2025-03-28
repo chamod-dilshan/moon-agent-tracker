@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import psycopg2
 import os
 from datetime import datetime
+import uuid
 
 app = Flask(__name__)
 
@@ -27,21 +28,23 @@ def notify():
     
     if 'agent_code' not in data or 'message' not in data:
         return jsonify({"error": "Missing agent_code or message"}), 400
+
+    notification_id = str(uuid.uuid4())  # ✅ Generate unique notification ID
     
     # Log notification to Redshift
     try:
         conn = get_redshift_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO notifications (agent_id, message, sent_at)
-            VALUES (%s, %s, %s)
-        """, (data['agent_code'], data['message'], datetime.now()))
+            INSERT INTO moontracker.notifications (notification_id, agent_id, message, sent_at)
+            VALUES (%s, %s, %s, %s)
+        """, (notification_id, data['agent_code'], data['message'], datetime.now()))
         conn.commit()
         cur.close()
         conn.close()
 
-        print(f"[NOTIFICATION] Agent {data['agent_code']}: {data['message']}")
-        return jsonify({"message": "Notification sent and logged"}), 200
+        print(f"[NOTIFICATION] ID: {notification_id} | Agent {data['agent_code']}: {data['message']}")
+        return jsonify({"message": "Notification sent and logged", "notification_id": notification_id}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

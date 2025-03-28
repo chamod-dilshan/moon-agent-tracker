@@ -31,7 +31,7 @@ def add_agent():
         conn = get_redshift_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO agents (agent_id, agent_name, email, branch_name, team_name, allowed_products)
+            INSERT INTO moontracker.agents (agent_id, agent_name, email, branch_name, team_name, allowed_products)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             data['id'],
@@ -56,7 +56,7 @@ def get_agents():
         cur = conn.cursor()
         cur.execute("""
             SELECT agent_id, agent_name, email, branch_name, team_name, allowed_products, created_at
-            FROM agents
+            FROM moontracker.agents
         """)
         rows = cur.fetchall()
         cur.close()
