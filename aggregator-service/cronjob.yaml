@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: aggregator-cron
 spec:
-  schedule: "*/2 * * * *"  # every 12 hours
+  schedule: "0 0 * * *"
   jobTemplate:
     spec:
       template:
