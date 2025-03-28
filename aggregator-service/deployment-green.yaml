@@ -17,7 +17,7 @@ spec:
       containers:
       - name: aggregator-service
         image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/aggregator-service:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 5003
         env:
@@ -30,4 +30,4 @@ spec:
         - name: REDSHIFT_PASSWORD
           value: "DATAst2012"
         - name: NOTIFICATION_URL
-          value: "a3f3a89b5ff9b4b58976edeee28b450b-375560315.ap-southeast-2.elb.amazonaws.com/notify"
+          value: "http://a3f3a89b5ff9b4b58976edeee28b450b-375560315.ap-southeast-2.elb.amazonaws.com/notify"
