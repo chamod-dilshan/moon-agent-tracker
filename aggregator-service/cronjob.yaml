@@ -21,6 +21,6 @@ spec:
                 value: "admin"
               - name: REDSHIFT_PASSWORD
                 value: "DATAst2012"
-              - name: NOTIFICATION_SERVICE_URL
-                value: "a3f3a89b5ff9b4b58976edeee28b450b-375560315.ap-southeast-2.elb.amazonaws.com"
+              - name: NOTIFICATION_URL
+                value: "a3f3a89b5ff9b4b58976edeee28b450b-375560315.ap-southeast-2.elb.amazonaws.com/notify"
           restartPolicy: OnFailure

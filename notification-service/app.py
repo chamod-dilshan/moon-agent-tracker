@@ -49,9 +49,34 @@ def notify():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/', methods=['GET'])
-def home():
-    return "Notification Service is running!"
+@app.route('/notifications', methods=['GET'])
+def get_notifications():
+    try:
+        conn = get_redshift_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT notification_id, agent_id, message, sent_at
+            FROM moontracker.notifications
+            ORDER BY sent_at DESC
+            LIMIT 100
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        notifications = [
+            {
+                "notification_id": row[0],
+                "agent_id": row[1],
+                "message": row[2],
+                "sent_at": row[3].isoformat()
+            }
+            for row in rows
+        ]
+        return jsonify(notifications), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
