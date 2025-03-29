@@ -12,7 +12,7 @@ ENDPOINTS = {
     "agent": "/agents",
     "integration": "/sales",
     "notification": "/notifications",
-    "aggregator": "/aggregate"
+    "aggregator": "/"
 }
 
 def test_endpoint(name, base_url, endpoint):
