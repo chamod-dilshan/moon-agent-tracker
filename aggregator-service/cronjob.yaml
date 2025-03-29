@@ -13,22 +13,12 @@ spec:
             image: 924055965473.dkr.ecr.ap-southeast-2.amazonaws.com/aggregator-service:latest
             command: ["python", "aggregate_job.py"]
             env:
-              - name: RDS_HOST
-                value: "moontracker-db.cfsm0qyek393.ap-southeast-2.rds.amazonaws.com"
-              - name: RDS_DB
-                value: "moontracker"
-              - name: RDS_USER
-                value: "admin"
-              - name: RDS_PASSWORD
-                value: "Moon1234!"
-              - name: REDSHIFT_HOST
-                value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
-              - name: REDSHIFT_DB
-                value: "moonmetrics_db"
-              - name: REDSHIFT_USER
-                value: "admin"
-              - name: REDSHIFT_PASSWORD
-                value: "DATAst2012"
-              - name: NOTIFICATION_URL
-                value: "http://a3f3a89b5ff9b4b58976edeee28b450b-375560315.ap-southeast-2.elb.amazonaws.com/notify"
+            - name: REDSHIFT_HOST
+              value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
+            - name: REDSHIFT_DB
+              value: "moonmetrics"
+            - name: REDSHIFT_USER
+              value: "admin"
+            - name: REDSHIFT_PASSWORD
+              value: "Moon1234!"
           restartPolicy: OnFailure

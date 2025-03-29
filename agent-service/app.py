@@ -1,24 +1,23 @@
 from flask import Flask, request, jsonify
-import mysql.connector
+import psycopg2
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 
-# 🔌 RDS MySQL connection details
-RDS_HOST = os.getenv('RDS_HOST')
-RDS_DB = os.getenv('RDS_DB')
-RDS_USER = os.getenv('RDS_USER')
-RDS_PASSWORD = os.getenv('RDS_PASSWORD')
-RDS_PORT = 3306
+# 🔌 Redshift connection details
+REDSHIFT_HOST = os.getenv('REDSHIFT_HOST')
+REDSHIFT_DB = os.getenv('REDSHIFT_DB')
+REDSHIFT_USER = os.getenv('REDSHIFT_USER')
+REDSHIFT_PASSWORD = os.getenv('REDSHIFT_PASSWORD')
+REDSHIFT_PORT = 5439
 
-def get_rds_connection():
-    return mysql.connector.connect(
-        host=RDS_HOST,
-        port=RDS_PORT,
-        user=RDS_USER,
-        password=RDS_PASSWORD,
-        database=RDS_DB
+def get_redshift_connection():
+    return psycopg2.connect(
+        host=REDSHIFT_HOST,
+        port=REDSHIFT_PORT,
+        database=REDSHIFT_DB,
+        user=REDSHIFT_USER,
+        password=REDSHIFT_PASSWORD
     )
 
 @app.route('/agents', methods=['POST'])
@@ -29,24 +28,23 @@ def add_agent():
         return jsonify({"error": "Missing one or more required fields"}), 400
 
     try:
-        conn = get_rds_connection()
+        conn = get_redshift_connection()
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO agents (agent_id, agent_name, email, branch_name, team_name, allowed_products, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO moontracker.agents (agent_id, agent_name, email, branch_name, team_name, allowed_products)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             data['id'],
             data['name'],
             data['email'],
             data['branch'],
             data['team'],
-            data['allowed_products'],
-            datetime.now()
+            data['allowed_products']
         ))
         conn.commit()
         cur.close()
         conn.close()
-        return jsonify({"message": "Agent added successfully!"}), 201
+        return jsonify({"message": "Agent added to Redshift successfully!"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -54,11 +52,11 @@ def add_agent():
 @app.route('/agents', methods=['GET'])
 def get_agents():
     try:
-        conn = get_rds_connection()
+        conn = get_redshift_connection()
         cur = conn.cursor()
         cur.execute("""
             SELECT agent_id, agent_name, email, branch_name, team_name, allowed_products, created_at
-            FROM agents
+            FROM moontracker.agents
         """)
         rows = cur.fetchall()
         cur.close()
@@ -79,10 +77,6 @@ def get_agents():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route('/', methods=['GET'])
-def home():
-    return "Agent Service is running!"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
