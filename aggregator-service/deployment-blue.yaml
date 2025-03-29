@@ -22,7 +22,7 @@ spec:
         - containerPort: 5003
         env:
         - name: RDS_HOST
-          value: "moontracker-rds.cfsm0qyek393.ap-southeast-2.rds.amazonaws.com"
+          value: "moontracker-db.cfsm0qyek393.ap-southeast-2.rds.amazonaws.com"
         - name: RDS_DB
           value: "moontracker"
         - name: RDS_USER
