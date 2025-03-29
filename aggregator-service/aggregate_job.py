@@ -1,19 +1,36 @@
 from collections import defaultdict
 from datetime import datetime
 import psycopg2
+import mysql.connector
 import os
 import uuid
 import requests
 
-# 🔌 Redshift config
+# 🌐 Notification service endpoint
+NOTIFICATION_URL = os.getenv('NOTIFICATION_URL')
+
+# 🔌 RDS MySQL Config
+RDS_HOST = os.getenv('RDS_HOST')
+RDS_DB = os.getenv('RDS_DB')
+RDS_USER = os.getenv('RDS_USER')
+RDS_PASSWORD = os.getenv('RDS_PASSWORD')
+RDS_PORT = 3306
+
+# 🔴 Redshift Config (for metrics)
 REDSHIFT_HOST = os.getenv('REDSHIFT_HOST')
 REDSHIFT_DB = os.getenv('REDSHIFT_DB')
 REDSHIFT_USER = os.getenv('REDSHIFT_USER')
 REDSHIFT_PASSWORD = os.getenv('REDSHIFT_PASSWORD')
 REDSHIFT_PORT = 5439
 
-# 🔔 Notification service endpoint
-NOTIFICATION_URL = os.getenv('NOTIFICATION_URL')
+def get_rds_connection():
+    return mysql.connector.connect(
+        host=RDS_HOST,
+        port=RDS_PORT,
+        user=RDS_USER,
+        password=RDS_PASSWORD,
+        database=RDS_DB
+    )
 
 def get_redshift_connection():
     return psycopg2.connect(
@@ -29,26 +46,25 @@ def insert_metric_data(metric_type, entity_name, value):
         conn = get_redshift_connection()
         cur = conn.cursor()
 
-        # Mark previous metrics of the same type/entity as not latest
+        # Mark previous metrics as inactive
         cur.execute("""
-            UPDATE moontracker.sales_metrics
+            UPDATE moonmetrics.sales_metrics
             SET is_latest = FALSE
             WHERE metric_type = %s AND entity_name = %s AND is_latest = TRUE
         """, (metric_type, entity_name))
 
-        # Insert new metric as latest
+        # Insert latest metric
         cur.execute("""
-            INSERT INTO moontracker.sales_metrics (metric_id, metric_type, entity_name, value, is_latest)
+            INSERT INTO moonmetrics.sales_metrics (metric_id, metric_type, entity_name, value, is_latest)
             VALUES (%s, %s, %s, %s, TRUE)
         """, (str(uuid.uuid4()), metric_type, entity_name, value))
 
         conn.commit()
         cur.close()
         conn.close()
-        print(f"[METRIC INSERTED] {metric_type} - {entity_name} = {value}")
-
+        print(f"[METRIC] {metric_type} - {entity_name} = {value}")
     except Exception as e:
-        print(f"[ERROR] Failed to insert metric: {e}")
+        print(f"[ERROR] Redshift insert failed: {e}")
 
 def send_notification(agent_code, message):
     try:
@@ -59,32 +75,29 @@ def send_notification(agent_code, message):
         response = requests.post(NOTIFICATION_URL, json=payload)
         print(f"[NOTIFY] {response.status_code} - {response.text}")
     except Exception as e:
-        print(f"[ERROR] Failed to notify: {e}")
+        print(f"[ERROR] Notification failed: {e}")
 
 def aggregate_sales():
     try:
-        conn = get_redshift_connection()
-        cur = conn.cursor()
+        # 🔄 Fetch raw data from RDS
+        rds = get_rds_connection()
+        cursor = rds.cursor()
 
-        # Fetch sales data
-        cur.execute("SELECT agent_id, product_code, sale_amount FROM moontracker.sales")
-        sales_rows = cur.fetchall()
+        cursor.execute("SELECT agent_id, product_code, sale_amount FROM sales")
+        sales_rows = cursor.fetchall()
 
-        # Fetch agent metadata
-        cur.execute("SELECT agent_id, branch_name, team_name FROM moontracker.agents")
-        agent_meta_rows = cur.fetchall()
+        cursor.execute("SELECT agent_id, branch_name, team_name FROM agents")
+        agent_rows = cursor.fetchall()
 
-        # Fetch product targets
-        cur.execute("SELECT product_code, target_amount FROM moontracker.product_targets")
-        product_target_rows = cur.fetchall()
+        cursor.execute("SELECT product_code, target_amount FROM product_targets")
+        product_targets = {code: float(target) for code, target in cursor.fetchall()}
 
-        cur.close()
-        conn.close()
+        cursor.close()
+        rds.close()
 
-        # Prepare mappings
-        agent_to_branch = {aid: b for (aid, b, _) in agent_meta_rows}
-        agent_to_team = {aid: t for (aid, _, t) in agent_meta_rows}
-        product_targets = {p: float(t) for (p, t) in product_target_rows}
+        # Mapping agents
+        agent_to_branch = {a: b for (a, b, _) in agent_rows}
+        agent_to_team = {a: t for (a, _, t) in agent_rows}
 
         # Aggregation
         totals_by_agent = defaultdict(float)
@@ -99,24 +112,22 @@ def aggregate_sales():
 
             branch = agent_to_branch.get(agent_id, "Unknown")
             team = agent_to_team.get(agent_id, "Unknown")
-
             totals_by_branch[branch] += amount
             totals_by_team[team] += amount
 
-        print(f"[{datetime.now()}] Aggregating sales and pushing metrics...")
+        print(f"[{datetime.now()}] Aggregating sales...")
 
-        # Insert metrics
+        # ⬇️ Push to Redshift
         for agent, total in totals_by_agent.items():
             insert_metric_data("sales_by_agent", agent, total)
 
         for product, total in totals_by_product.items():
             insert_metric_data("sales_by_product", product, total)
 
-            # Check for targets and notify if met
             target = product_targets.get(product)
             if target and total >= target:
-                insert_metric_data('product_achieved_target', product, total)
-                send_notification("system", f"Sales target achieved for {product}! Total: ${total:.2f}, Target: ${target:.2f}")
+                insert_metric_data("product_achieved_target", product, total)
+                send_notification("system", f"🎯 Sales target achieved for {product}! Total: ${total:.2f}, Target: ${target:.2f}")
 
         for branch, total in totals_by_branch.items():
             insert_metric_data("sales_by_branch", branch, total)
@@ -124,10 +135,10 @@ def aggregate_sales():
         for team, total in totals_by_team.items():
             insert_metric_data("sales_by_team", team, total)
 
-        print("Aggregation complete.")
+        print("✅ Aggregation complete.")
 
     except Exception as e:
-        print(f"[ERROR] Aggregation failed: {e}")
+        print(f"[FATAL ERROR] {e}")
 
 if __name__ == '__main__':
     aggregate_sales()

@@ -21,11 +21,11 @@ spec:
         ports:
         - containerPort: 5000
         env:
-        - name: REDSHIFT_HOST
-          value: "moonagent-cluster.cpcjx7hrgnyr.ap-southeast-2.redshift.amazonaws.com"
-        - name: REDSHIFT_DB
-          value: "moonmetrics_db"
-        - name: REDSHIFT_USER
+        - name: RDS_HOST
+          value: "moontracker-rds.cfsm0qyek393.ap-southeast-2.rds.amazonaws.com"
+        - name: RDS_DB
+          value: "moontracker"
+        - name: RDS_USER
           value: "admin"
-        - name: REDSHIFT_PASSWORD
-          value: "DATAst2012"
+        - name: RDS_PASSWORD
+          value: "Moon1234!"
