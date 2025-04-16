@@ -1,11 +1,10 @@
 import requests
 
-# Replace these with your actual LoadBalancer URLs from kubectl get svc
 BASE_URLS = {
-    "agent": "http://a9fa113adae3f4e8db20b22f76d0dc83-429117789.ap-southeast-2.elb.amazonaws.com",
-    "integration": "http://a788f173e0d114dddb3e427af433f58c-1008796998.ap-southeast-2.elb.amazonaws.com",
-    "notification": "http://a3f3a89b5ff9b4b58976edeee28b450b-375560315.ap-southeast-2.elb.amazonaws.com",
-    "aggregator": "http://a2bced08345be48a78cb4697dffc1f83-496351603.ap-southeast-2.elb.amazonaws.com"
+    "agent": "http://a08af2d1b44534df4a85d6adb8c31606-1181649550.ap-southeast-2.elb.amazonaws.com",
+    "integration": "http://ab10bf16c2a2848bdb418c7b841415e8-1707361465.ap-southeast-2.elb.amazonaws.com",
+    "notification": "http://a7e041e4dbf364de7bdcc75799ae3815-35664068.ap-southeast-2.elb.amazonaws.com",
+    "aggregator": "http://a0c40126922ba44219699d13ba3ef9ab-496998035.ap-southeast-2.elb.amazonaws.com"
 }
 
 ENDPOINTS = {
