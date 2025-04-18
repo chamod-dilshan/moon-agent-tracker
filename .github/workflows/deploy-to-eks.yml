@@ -58,7 +58,6 @@ jobs:
         kubectl apply -f integration-service/deployment-${NEW_COLOR}.yaml
         kubectl apply -f notification-service/deployment-${NEW_COLOR}.yaml
 
-        # CronJob remains the same
         kubectl apply -f aggregator-service/cronjob.yaml
 
         # Ensure services exist
